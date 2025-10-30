@@ -1,0 +1,6 @@
+@SampleOnionApp.Presentation_HostAddress = http://localhost:0
+
+GET {{SampleOnionApp.Presentation_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
