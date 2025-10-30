@@ -1,0 +1,21 @@
+# IDE settings folders
+.idea/
+.vs/
+
+# Build outputs
+bin/
+obj/
+out/
+
+# Tooling artifacts
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+*.DotSettings
+
+# Logs
+restore.log
+
+# Rider temporary files
+*.sln.iml
