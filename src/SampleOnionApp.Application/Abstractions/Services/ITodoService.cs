@@ -13,4 +13,6 @@ public interface ITodoService
     Task<bool> UpdateAsync(Guid id, string title, string? description, CancellationToken cancellationToken = default);
 
     Task<bool> CompleteAsync(Guid id, CancellationToken cancellationToken = default);
+
+    Task<int> DeleteAllAsync(CancellationToken cancellationToken = default);
 }

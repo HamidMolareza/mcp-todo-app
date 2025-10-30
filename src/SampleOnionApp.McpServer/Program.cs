@@ -1,5 +1,4 @@
 using System.ComponentModel;
-using System.Linq;
 using System.Reflection;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -62,7 +61,7 @@ public static class TodoTools
         var item = await todoService.GetByIdAsync(id, cancellationToken);
         return item is null
             ? new { found = false, item = (TodoItemResponse?)null }
-            : new { found = true, item = ToResponseModel(item) };
+            : new { found = true, item = ToResponseModel(item) }!;
     }
 
     [McpServerTool(Name = "todos_create", UseStructuredContent = true)]
@@ -70,7 +69,8 @@ public static class TodoTools
     public static async Task<object> CreateAsync(
         ITodoService todoService,
         [Description("Short title for the todo item")] string title,
-        [Description("Optional longer description for the todo item")] string? description,
+        [Description("Optional longer description for the todo item")] 
+        string? description = null,
         CancellationToken cancellationToken = default)
     {
         var created = await todoService.CreateAsync(title, description, cancellationToken);
@@ -130,6 +130,19 @@ public static class TodoTools
         {
             completed = true,
             item = item is null ? null : ToResponseModel(item)
+        };
+    }
+
+    [McpServerTool(Name = "todos_delete_all", UseStructuredContent = true)]
+    [Description("Delete all todo items")]
+    public static async Task<object> DeleteAllAsync(
+        ITodoService todoService,
+        CancellationToken cancellationToken = default)
+    {
+        var deletedCount = await todoService.DeleteAllAsync(cancellationToken);
+        return new
+        {
+            deleted = deletedCount
         };
     }
 

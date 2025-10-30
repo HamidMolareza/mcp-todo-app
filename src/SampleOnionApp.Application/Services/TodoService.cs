@@ -52,6 +52,9 @@ public sealed class TodoService(ITodoRepository repository) : ITodoService
         return true;
     }
 
+    public Task<int> DeleteAllAsync(CancellationToken cancellationToken = default) =>
+        repository.DeleteAllAsync(cancellationToken);
+
     private static TodoItemDto MapToDto(TodoItem item) =>
         new(
             item.Id,

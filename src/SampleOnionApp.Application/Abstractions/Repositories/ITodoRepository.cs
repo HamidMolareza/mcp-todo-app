@@ -11,4 +11,6 @@ public interface ITodoRepository
     Task AddAsync(TodoItem item, CancellationToken cancellationToken = default);
 
     Task UpdateAsync(TodoItem item, CancellationToken cancellationToken = default);
+
+    Task<int> DeleteAllAsync(CancellationToken cancellationToken = default);
 }

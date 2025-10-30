@@ -34,4 +34,11 @@ public sealed class InMemoryTodoRepository : ITodoRepository
         _items[item.Id] = item;
         return Task.CompletedTask;
     }
+
+    public Task<int> DeleteAllAsync(CancellationToken cancellationToken = default)
+    {
+        var count = _items.Count;
+        _items.Clear();
+        return Task.FromResult(count);
+    }
 }
