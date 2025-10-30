@@ -16,6 +16,8 @@ out/
 
 # Logs
 restore.log
+*.log
+src/SampleOnionApp.McpServer/publish/
 
 # Rider temporary files
 *.sln.iml
