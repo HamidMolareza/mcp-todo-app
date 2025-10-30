@@ -7,50 +7,48 @@ namespace SampleOnionApp.Application.Services;
 
 public sealed class TodoService(ITodoRepository repository) : ITodoService
 {
-    private readonly ITodoRepository _repository = repository;
-
     public async Task<IReadOnlyList<TodoItemDto>> GetAllAsync(CancellationToken cancellationToken = default)
     {
-        var items = await _repository.GetAllAsync(cancellationToken);
+        var items = await repository.GetAllAsync(cancellationToken);
         return items.Select(MapToDto).ToArray();
     }
 
     public async Task<TodoItemDto?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
     {
-        var item = await _repository.GetByIdAsync(id, cancellationToken);
+        var item = await repository.GetByIdAsync(id, cancellationToken);
         return item is null ? null : MapToDto(item);
     }
 
     public async Task<TodoItemDto> CreateAsync(string title, string? description, CancellationToken cancellationToken = default)
     {
         TodoItem item = TodoItem.Create(title, description);
-        await _repository.AddAsync(item, cancellationToken);
+        await repository.AddAsync(item, cancellationToken);
         return MapToDto(item);
     }
 
     public async Task<bool> UpdateAsync(Guid id, string title, string? description, CancellationToken cancellationToken = default)
     {
-        var item = await _repository.GetByIdAsync(id, cancellationToken);
+        var item = await repository.GetByIdAsync(id, cancellationToken);
         if (item is null)
         {
             return false;
         }
 
         item.UpdateDetails(title, description);
-        await _repository.UpdateAsync(item, cancellationToken);
+        await repository.UpdateAsync(item, cancellationToken);
         return true;
     }
 
     public async Task<bool> CompleteAsync(Guid id, CancellationToken cancellationToken = default)
     {
-        var item = await _repository.GetByIdAsync(id, cancellationToken);
+        var item = await repository.GetByIdAsync(id, cancellationToken);
         if (item is null)
         {
             return false;
         }
 
         item.Complete();
-        await _repository.UpdateAsync(item, cancellationToken);
+        await repository.UpdateAsync(item, cancellationToken);
         return true;
     }
 
