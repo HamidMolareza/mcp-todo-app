@@ -2,6 +2,13 @@
 
 Sample solution that highlights a lightweight Model Context Protocol (MCP) server built on top of an onion-architecture todo domain. A companion ASP.NET Core minimal API ships alongside it as a convenient way to explore the same application services over HTTP.
 
+## Demo video
+
+<video controls muted playsinline width="640">
+  <source src="docs/demp.webm" type="video/webm">
+  Your browser does not support embedded videos. Watch it <a href="docs/demp.webm">here</a>.
+</video>
+
 ## Solution layout
 
 - `SampleOnionApp.Domain` – Aggregate roots and domain logic (`TodoItem` entity).
