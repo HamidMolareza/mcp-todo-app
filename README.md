@@ -54,7 +54,7 @@ Supported methods:
 The helper script `scripts/run-mcp-server.sh` wraps the server launch. To make it available to Codex:
 
 ```bash
-codex mcp add sample-onion-todos /home/home/Desktop/codex-test/scripts/run-mcp-server.sh
+codex mcp add sample-onion-todos ./scripts/run-mcp-server.sh
 ```
 
 After that, `codex mcp list` will show the entry. You can start a Codex session with MCP access by launching Codex and selecting the `sample-onion-todos` server when prompted (or by using the relevant CLI flags once generally available).
@@ -75,13 +75,6 @@ Once running, exercise the endpoints with any HTTP client:
 - `POST /api/todos/{id}/complete` – Mark as complete.
 - `DELETE /api/todos/{id}?confirm=true` – Delete one item (requires an explicit `confirm=true` signal).
 - `DELETE /api/todos?confirm=true` – Delete every item and returns the number removed.
-
-## Onion architecture notes
-
-- Domain remains free of infrastructure/application dependencies.
-- Application layer exposes contracts and orchestrates domain behaviour.
-- Infrastructure implements abstractions and registers them for DI.
-- Presentation layers depend only on abstractions, enabling easy reuse between HTTP and MCP hosts.
 
 ## Next steps
 
