@@ -73,6 +73,30 @@ public static class TodoTools {
         return new { created = true, item = ToResponseModel(created) };
     }
 
+    [McpServerTool(Name = "todos_create_range")]
+    [Description("Create a list of todo items. To create multi todo items, it is recommended to use the batching API.")]
+    public static async Task<object> CreateRangeAsync(
+        ITodoService todoService,
+        [Description("List of todo items to create")]
+        TodoItemRequest[]? todoItems = null,
+        CancellationToken cancellationToken = default) {
+        var itemsToCreate = (todoItems ?? [])
+            .Where(item => !string.IsNullOrWhiteSpace(item.Title))
+            .Select(item => new TodoItemRequest(item.Title, item.Description))
+            .ToArray();
+
+        if (itemsToCreate.Length == 0) {
+            return new {
+                created = false,
+                reason = "no_items_provided",
+                items = Array.Empty<TodoItemResponse>()
+            };
+        }
+
+        var createdItems = await todoService.CreateRangeAsync(itemsToCreate, cancellationToken);
+        return new { created = true, items = createdItems.Select(ToResponseModel).ToArray() };
+    }
+
     [McpServerTool(Name = "todos_update")]
     [Description("Update an existing todo item")]
     public static async Task<object> UpdateAsync(
@@ -113,8 +137,10 @@ public static class TodoTools {
     [Description("Delete all todo items. This operation requires explicit user confirmation.")]
     public static async Task<object> DeleteAllAsync(
         ITodoService todoService,
-        [Description("Set to true to confirm deletion of all todo items")] bool confirm = false,
-        [Description("Confirmation token obtained from a previous request where confirmation_required=true")] Guid? confirmationToken = null,
+        [Description("Set to true to confirm deletion of all todo items")]
+        bool confirm = false,
+        [Description("Confirmation token obtained from a previous request where confirmation_required=true")]
+        Guid? confirmationToken = null,
         CancellationToken cancellationToken = default) {
         CleanupExpiredConfirmationTokens();
 
@@ -122,7 +148,8 @@ public static class TodoTools {
             var (token, expiresAtUtc) = CreateConfirmationToken();
             return new {
                 confirmation_required = true,
-                message = "This operation will permanently delete all todo items. Resend the request with confirm=true and the provided confirmationToken to proceed.",
+                message =
+                    "This operation will permanently delete all todo items. Resend the request with confirm=true and the provided confirmationToken to proceed.",
                 invalid_token = false,
                 confirmation_token = token,
                 expires_at_utc = expiresAtUtc
@@ -133,7 +160,8 @@ public static class TodoTools {
             var (token, expiresAtUtc) = CreateConfirmationToken();
             return new {
                 confirmation_required = true,
-                message = "The supplied confirmationToken is invalid or expired. Resend the request with confirm=true and the new confirmationToken to proceed.",
+                message =
+                    "The supplied confirmationToken is invalid or expired. Resend the request with confirm=true and the new confirmationToken to proceed.",
                 invalid_token = true,
                 confirmation_token = token,
                 expires_at_utc = expiresAtUtc

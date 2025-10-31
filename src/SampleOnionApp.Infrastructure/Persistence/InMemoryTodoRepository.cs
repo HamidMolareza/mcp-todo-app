@@ -29,6 +29,11 @@ public sealed class InMemoryTodoRepository : ITodoRepository
         return Task.CompletedTask;
     }
 
+    public async Task AddRangeAsync(IEnumerable<TodoItem> items, CancellationToken cancellationToken = default) {
+        foreach (var todoItem in items) 
+            await AddAsync(todoItem, cancellationToken);
+    }
+
     public Task UpdateAsync(TodoItem item, CancellationToken cancellationToken = default)
     {
         _items[item.Id] = item;

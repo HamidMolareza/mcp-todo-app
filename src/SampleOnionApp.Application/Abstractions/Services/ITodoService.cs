@@ -9,6 +9,7 @@ public interface ITodoService
     Task<TodoItemDto?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default);
 
     Task<TodoItemDto> CreateAsync(string title, string? description, CancellationToken cancellationToken = default);
+    Task<IReadOnlyList<TodoItemDto>> CreateRangeAsync(IEnumerable<TodoItemRequest> todoItems, CancellationToken cancellationToken = default);
 
     Task<bool> UpdateAsync(Guid id, string title, string? description, CancellationToken cancellationToken = default);
 

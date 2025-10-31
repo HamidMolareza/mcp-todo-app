@@ -26,6 +26,13 @@ public sealed class TodoService(ITodoRepository repository) : ITodoService
         return MapToDto(item);
     }
 
+    public async Task<IReadOnlyList<TodoItemDto>> CreateRangeAsync(IEnumerable<TodoItemRequest> todoItems, CancellationToken cancellationToken = default)
+    {
+        var dbItems = todoItems.Select(item=> TodoItem.Create(item.Title, item.Description)).ToList();
+        await repository.AddRangeAsync(dbItems, cancellationToken);
+        return dbItems.Select(MapToDto).ToList();
+    }
+
     public async Task<bool> UpdateAsync(Guid id, string title, string? description, CancellationToken cancellationToken = default)
     {
         var item = await repository.GetByIdAsync(id, cancellationToken);
