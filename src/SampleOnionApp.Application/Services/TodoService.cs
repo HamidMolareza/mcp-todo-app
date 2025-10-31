@@ -1,3 +1,4 @@
+using ErrorOr;
 using SampleOnionApp.Application.Abstractions.Repositories;
 using SampleOnionApp.Application.Abstractions.Services;
 using SampleOnionApp.Application.Models;
@@ -7,9 +8,9 @@ namespace SampleOnionApp.Application.Services;
 
 public sealed class TodoService(ITodoRepository repository) : ITodoService
 {
-    public async Task<IReadOnlyList<TodoItemDto>> GetAllAsync(CancellationToken cancellationToken = default)
+    public async Task<IReadOnlyList<TodoItemDto>> GetAllAsync(string? filter = null,CancellationToken cancellationToken = default)
     {
-        var items = await repository.GetAllAsync(cancellationToken);
+        var items = await repository.GetAllAsync(filter, cancellationToken);
         return items.Select(MapToDto).ToArray();
     }
 
@@ -57,6 +58,13 @@ public sealed class TodoService(ITodoRepository repository) : ITodoService
         item.Complete();
         await repository.UpdateAsync(item, cancellationToken);
         return true;
+    }
+
+    public async Task<ErrorOr<Success>> DeleteByIdAsync(Guid id, CancellationToken cancellationToken = default) {
+        var item = await repository.GetByIdAsync(id, cancellationToken);
+        if (item is null) return Error.NotFound(description: $"Can not find any item with id {id}");
+        await repository.DeleteByIdAsync(id, cancellationToken);
+        return Result.Success;
     }
 
     public Task<int> DeleteAllAsync(CancellationToken cancellationToken = default) =>

@@ -1,6 +1,6 @@
-using System.Collections.Concurrent;
 using System.ComponentModel;
 using System.Reflection;
+using ErrorOr;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -35,15 +35,14 @@ await builder.Build().RunAsync();
 
 [McpServerToolType]
 public static class TodoTools {
-    private static readonly ConcurrentDictionary<Guid, DateTime> PendingDeleteAllConfirmations = new();
-    private static readonly TimeSpan ConfirmationTokenLifetime = TimeSpan.FromMinutes(5);
-
     [McpServerTool(Name = "todos_list")]
     [Description("Get list of todo items")]
     public static async Task<object> GetAllAsync(
         ITodoService todoService,
+        [Description("Filter todo items by title and description case insensitive. This is optional parameter.")]
+        string? filter = null,
         CancellationToken cancellationToken = default) {
-        var items = await todoService.GetAllAsync(cancellationToken);
+        var items = await todoService.GetAllAsync(filter, cancellationToken);
         return new { items = items.Select(ToResponseModel).ToArray() };
     }
 
@@ -86,11 +85,7 @@ public static class TodoTools {
             .ToArray();
 
         if (itemsToCreate.Length == 0) {
-            return new {
-                created = false,
-                reason = "no_items_provided",
-                items = Array.Empty<TodoItemResponse>()
-            };
+            return new { created = false, reason = "no_items_provided", items = Array.Empty<TodoItemResponse>() };
         }
 
         var createdItems = await todoService.CreateRangeAsync(itemsToCreate, cancellationToken);
@@ -133,38 +128,48 @@ public static class TodoTools {
         return new { completed = true, item = item is null ? null : ToResponseModel(item) };
     }
 
-    [McpServerTool(Name = "todos_delete_all")]
-    [Description("Delete all todo items. This operation requires explicit user confirmation.")]
-    public static async Task<object> DeleteAllAsync(
+    [McpServerTool(Name = "todos_delete")]
+    [Description(
+        "Delete a todo item by id. This operation requires explicit user confirmation. Show the item to user and ask user to confirm deletion.")]
+    public static async Task<object> DeleteByIdAsync(
         ITodoService todoService,
-        [Description("Set to true to confirm deletion of all todo items")]
+        [Description("Id of item to delete")] Guid itemId,
+        [Description(
+            "Set to true to confirm deletion of item. Never auto fill it. Always ask user to explicit reconfirm it.")]
         bool confirm = false,
-        [Description("Confirmation token obtained from a previous request where confirmation_required=true")]
-        Guid? confirmationToken = null,
         CancellationToken cancellationToken = default) {
-        CleanupExpiredConfirmationTokens();
-
-        if (!confirm || confirmationToken is null) {
-            var (token, expiresAtUtc) = CreateConfirmationToken();
+        if (!confirm) {
             return new {
                 confirmation_required = true,
                 message =
-                    "This operation will permanently delete all todo items. Resend the request with confirm=true and the provided confirmationToken to proceed.",
-                invalid_token = false,
-                confirmation_token = token,
-                expires_at_utc = expiresAtUtc
+                    "This operation will permanently delete item. Resend the request with confirm=true to proceed.",
             };
         }
 
-        if (!TryConsumeConfirmationToken(confirmationToken.Value)) {
-            var (token, expiresAtUtc) = CreateConfirmationToken();
+        var result = await todoService.DeleteByIdAsync(itemId, cancellationToken);
+        return result.Match<object>(
+            _ => new { success = true },
+            error => new {
+                Success = false,
+                Errors = error.Select(e => new { error = e.Description, code = e.Code })
+            }
+        );
+    }
+
+    [McpServerTool(Name = "todos_delete_all")]
+    [Description(
+        "Delete all todo items. This operation requires explicit user confirmation. So ask user to reconfirm it.")]
+    public static async Task<object> DeleteAllAsync(
+        ITodoService todoService,
+        [Description(
+            "Set to true to confirm deletion of all todo items. Never auto fill it. Always ask user to explicit reconfirm it.")]
+        bool confirm = false,
+        CancellationToken cancellationToken = default) {
+        if (!confirm) {
             return new {
                 confirmation_required = true,
                 message =
-                    "The supplied confirmationToken is invalid or expired. Resend the request with confirm=true and the new confirmationToken to proceed.",
-                invalid_token = true,
-                confirmation_token = token,
-                expires_at_utc = expiresAtUtc
+                    "This operation will permanently delete all todo items. Resend the request with confirm=true to proceed.",
             };
         }
 
@@ -188,33 +193,4 @@ public static class TodoTools {
         bool IsCompleted,
         DateTime CreatedAtUtc,
         DateTime? CompletedAtUtc);
-
-    private static (Guid Token, DateTime ExpiresAtUtc) CreateConfirmationToken() {
-        var token = Guid.NewGuid();
-        var expiresAtUtc = DateTime.UtcNow.Add(ConfirmationTokenLifetime);
-        PendingDeleteAllConfirmations[token] = expiresAtUtc;
-        return (token, expiresAtUtc);
-    }
-
-    private static bool TryConsumeConfirmationToken(Guid token) {
-        if (!PendingDeleteAllConfirmations.TryGetValue(token, out var expiresAtUtc)) {
-            return false;
-        }
-
-        if (expiresAtUtc <= DateTime.UtcNow) {
-            PendingDeleteAllConfirmations.TryRemove(token, out _);
-            return false;
-        }
-
-        return PendingDeleteAllConfirmations.TryRemove(token, out _);
-    }
-
-    private static void CleanupExpiredConfirmationTokens() {
-        var now = DateTime.UtcNow;
-        foreach (var entry in PendingDeleteAllConfirmations) {
-            if (entry.Value <= now) {
-                PendingDeleteAllConfirmations.TryRemove(entry.Key, out _);
-            }
-        }
-    }
 }

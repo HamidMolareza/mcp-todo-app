@@ -1,10 +1,11 @@
+using ErrorOr;
 using SampleOnionApp.Application.Models;
 
 namespace SampleOnionApp.Application.Abstractions.Services;
 
 public interface ITodoService
 {
-    Task<IReadOnlyList<TodoItemDto>> GetAllAsync(CancellationToken cancellationToken = default);
+    Task<IReadOnlyList<TodoItemDto>> GetAllAsync(string? filter = null, CancellationToken cancellationToken = default);
 
     Task<TodoItemDto?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default);
 
@@ -15,5 +16,6 @@ public interface ITodoService
 
     Task<bool> CompleteAsync(Guid id, CancellationToken cancellationToken = default);
 
+    Task<ErrorOr<Success>> DeleteByIdAsync(Guid id, CancellationToken cancellationToken = default);
     Task<int> DeleteAllAsync(CancellationToken cancellationToken = default);
 }

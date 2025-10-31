@@ -4,7 +4,7 @@ namespace SampleOnionApp.Application.Abstractions.Repositories;
 
 public interface ITodoRepository
 {
-    Task<IReadOnlyList<TodoItem>> GetAllAsync(CancellationToken cancellationToken = default);
+    Task<IReadOnlyList<TodoItem>> GetAllAsync(string? filter = null,CancellationToken cancellationToken = default);
 
     Task<TodoItem?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default);
 
@@ -13,5 +13,6 @@ public interface ITodoRepository
 
     Task UpdateAsync(TodoItem item, CancellationToken cancellationToken = default);
 
+    Task DeleteByIdAsync(Guid id, CancellationToken cancellationToken = default);
     Task<int> DeleteAllAsync(CancellationToken cancellationToken = default);
 }

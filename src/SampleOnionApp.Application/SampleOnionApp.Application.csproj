@@ -2,6 +2,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\SampleOnionApp.Domain\SampleOnionApp.Domain.csproj" />
+    <PackageReference Include="ErrorOr" Version="2.0.1" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="8.0.0" />
   </ItemGroup>
 

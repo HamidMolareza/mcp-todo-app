@@ -24,8 +24,8 @@ app.UseHttpsRedirection();
 var todos = app.MapGroup("/api/todos")
     .WithTags("Todos");
 
-todos.MapGet("/", async (ITodoService service, CancellationToken cancellationToken) =>
-    Results.Ok(await service.GetAllAsync(cancellationToken)))
+todos.MapGet("/", async (ITodoService service, string? filter = null, CancellationToken cancellationToken = default) =>
+    Results.Ok(await service.GetAllAsync(filter, cancellationToken)))
     .WithName("GetTodos")
     .WithOpenApi();
 
