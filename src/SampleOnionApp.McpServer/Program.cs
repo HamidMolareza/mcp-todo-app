@@ -1,3 +1,4 @@
+using System.Collections.Concurrent;
 using System.ComponentModel;
 using System.Reflection;
 using Microsoft.Extensions.DependencyInjection;
@@ -34,6 +35,9 @@ await builder.Build().RunAsync();
 
 [McpServerToolType]
 public static class TodoTools {
+    private static readonly ConcurrentDictionary<Guid, DateTime> PendingDeleteAllConfirmations = new();
+    private static readonly TimeSpan ConfirmationTokenLifetime = TimeSpan.FromMinutes(5);
+
     [McpServerTool(Name = "todos_list")]
     [Description("Get list of todo items")]
     public static async Task<object> GetAllAsync(
@@ -110,11 +114,29 @@ public static class TodoTools {
     public static async Task<object> DeleteAllAsync(
         ITodoService todoService,
         [Description("Set to true to confirm deletion of all todo items")] bool confirm = false,
+        [Description("Confirmation token obtained from a previous request where confirmation_required=true")] Guid? confirmationToken = null,
         CancellationToken cancellationToken = default) {
-        if (!confirm) {
+        CleanupExpiredConfirmationTokens();
+
+        if (!confirm || confirmationToken is null) {
+            var (token, expiresAtUtc) = CreateConfirmationToken();
             return new {
                 confirmation_required = true,
-                message = "This operation will permanently delete all todo items. Call again with confirm=true to proceed."
+                message = "This operation will permanently delete all todo items. Resend the request with confirm=true and the provided confirmationToken to proceed.",
+                invalid_token = false,
+                confirmation_token = token,
+                expires_at_utc = expiresAtUtc
+            };
+        }
+
+        if (!TryConsumeConfirmationToken(confirmationToken.Value)) {
+            var (token, expiresAtUtc) = CreateConfirmationToken();
+            return new {
+                confirmation_required = true,
+                message = "The supplied confirmationToken is invalid or expired. Resend the request with confirm=true and the new confirmationToken to proceed.",
+                invalid_token = true,
+                confirmation_token = token,
+                expires_at_utc = expiresAtUtc
             };
         }
 
@@ -138,4 +160,33 @@ public static class TodoTools {
         bool IsCompleted,
         DateTime CreatedAtUtc,
         DateTime? CompletedAtUtc);
+
+    private static (Guid Token, DateTime ExpiresAtUtc) CreateConfirmationToken() {
+        var token = Guid.NewGuid();
+        var expiresAtUtc = DateTime.UtcNow.Add(ConfirmationTokenLifetime);
+        PendingDeleteAllConfirmations[token] = expiresAtUtc;
+        return (token, expiresAtUtc);
+    }
+
+    private static bool TryConsumeConfirmationToken(Guid token) {
+        if (!PendingDeleteAllConfirmations.TryGetValue(token, out var expiresAtUtc)) {
+            return false;
+        }
+
+        if (expiresAtUtc <= DateTime.UtcNow) {
+            PendingDeleteAllConfirmations.TryRemove(token, out _);
+            return false;
+        }
+
+        return PendingDeleteAllConfirmations.TryRemove(token, out _);
+    }
+
+    private static void CleanupExpiredConfirmationTokens() {
+        var now = DateTime.UtcNow;
+        foreach (var entry in PendingDeleteAllConfirmations) {
+            if (entry.Value <= now) {
+                PendingDeleteAllConfirmations.TryRemove(entry.Key, out _);
+            }
+        }
+    }
 }
