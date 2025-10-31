@@ -4,10 +4,12 @@ Sample solution that highlights a lightweight Model Context Protocol (MCP) serve
 
 ## Demo video
 
-<video controls muted playsinline width="640">
-  <source src="docs/demp.webm" type="video/webm">
-  Your browser does not support embedded videos. Watch it <a href="docs/demp.webm">here</a>.
-</video>
+  <video controls muted playsinline width="640">
+    <source src="https://raw.githubusercontent.com/HamidMolareza/mcp-todo-app/main/docs/demo.webm" type="video/webm">
+    Your browser does not support embedded videos. Watch it
+    <a href="https://raw.githubusercontent.com/HamidMolareza/mcp-todo-app/main/docs/demo.webm">here</a>.
+  </video>
+[![Watch the video](https://raw.githubusercontent.com/HamidMolareza/mcp-todo-app/main/docs/demo.webm)](https://raw.githubusercontent.com/HamidMolareza/mcp-todo-app/main/docs/demo.webm)
 
 ## Solution layout
 
