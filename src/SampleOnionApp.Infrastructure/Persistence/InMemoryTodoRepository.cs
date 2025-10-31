@@ -18,7 +18,7 @@ public sealed class InMemoryTodoRepository : ITodoRepository
         {
             snapshot = snapshot.Where(item =>
                 item.Title.Contains(filter, StringComparison.OrdinalIgnoreCase) ||
-                (item.Description is null || item.Description.Contains(filter, StringComparison.OrdinalIgnoreCase)))
+                (item.Description != null && item.Description.Contains(filter, StringComparison.OrdinalIgnoreCase)))
                 .ToArray();
         }
 
