@@ -105,12 +105,19 @@ public static class TodoTools {
         return new { completed = true, item = item is null ? null : ToResponseModel(item) };
     }
 
-    [McpServerTool(Name = "todos_delete_all", UseStructuredContent = true)]
-    [Description("Delete all todo items")]
+    [McpServerTool(Name = "todos_delete_all")]
+    [Description("Delete all todo items. This operation requires explicit user confirmation.")]
     public static async Task<object> DeleteAllAsync(
         ITodoService todoService,
-        CancellationToken cancellationToken = default)
-    {
+        [Description("Set to true to confirm deletion of all todo items")] bool confirm = false,
+        CancellationToken cancellationToken = default) {
+        if (!confirm) {
+            return new {
+                confirmation_required = true,
+                message = "This operation will permanently delete all todo items. Call again with confirm=true to proceed."
+            };
+        }
+
         var deletedCount = await todoService.DeleteAllAsync(cancellationToken);
         return new { deleted = deletedCount };
     }
