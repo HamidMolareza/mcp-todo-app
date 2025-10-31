@@ -148,10 +148,7 @@ public static class TodoTools {
         var result = await todoService.DeleteByIdAsync(itemId, cancellationToken);
         return result.Match<object>(
             _ => new { success = true },
-            error => new {
-                Success = false,
-                Errors = error.Select(e => new { error = e.Description, code = e.Code })
-            }
+            error => new { Success = false, Errors = error.Select(e => new { error = e.Description, code = e.Code }) }
         );
     }
 

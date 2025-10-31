@@ -3,10 +3,8 @@ namespace SampleOnionApp.Domain.Entities;
 /// <summary>
 /// Aggregate root representing a simple to-do task.
 /// </summary>
-public sealed class TodoItem
-{
-    private TodoItem(Guid id, string title, string? description, DateTime createdAtUtc)
-    {
+public sealed class TodoItem {
+    private TodoItem(Guid id, string title, string? description, DateTime createdAtUtc) {
         Id = id;
         Title = title;
         Description = description;
@@ -26,20 +24,16 @@ public sealed class TodoItem
 
     public DateTime? CompletedAtUtc { get; private set; }
 
-    public static TodoItem Create(string title, string? description = null)
-    {
-        if (string.IsNullOrWhiteSpace(title))
-        {
+    public static TodoItem Create(string title, string? description = null) {
+        if (string.IsNullOrWhiteSpace(title)) {
             throw new ArgumentException("Title must be provided.", nameof(title));
         }
 
         return new TodoItem(Guid.NewGuid(), title.Trim(), description?.Trim(), DateTime.UtcNow);
     }
 
-    public void UpdateDetails(string title, string? description)
-    {
-        if (string.IsNullOrWhiteSpace(title))
-        {
+    public void UpdateDetails(string title, string? description) {
+        if (string.IsNullOrWhiteSpace(title)) {
             throw new ArgumentException("Title must be provided.", nameof(title));
         }
 
@@ -47,10 +41,8 @@ public sealed class TodoItem
         Description = string.IsNullOrWhiteSpace(description) ? null : description.Trim();
     }
 
-    public void Complete()
-    {
-        if (IsCompleted)
-        {
+    public void Complete() {
+        if (IsCompleted) {
             return;
         }
 

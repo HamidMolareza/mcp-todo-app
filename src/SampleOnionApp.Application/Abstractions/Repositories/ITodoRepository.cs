@@ -2,9 +2,8 @@ using SampleOnionApp.Domain.Entities;
 
 namespace SampleOnionApp.Application.Abstractions.Repositories;
 
-public interface ITodoRepository
-{
-    Task<IReadOnlyList<TodoItem>> GetAllAsync(string? filter = null,CancellationToken cancellationToken = default);
+public interface ITodoRepository {
+    Task<IReadOnlyList<TodoItem>> GetAllAsync(string? filter = null, CancellationToken cancellationToken = default);
 
     Task<TodoItem?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default);
 
