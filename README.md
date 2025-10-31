@@ -5,10 +5,10 @@ Sample solution demonstrating an ASP.NET Core API built with an onion architectu
 ## Solution layout
 
 - `SampleOnionApp.Domain` – Aggregate roots and domain logic (`TodoItem` entity).
-- `SampleOnionApp.Application` – Use-case services, DTOs, and abstraction contracts (`ITodoService`, `ITodoRepository`).
+- `SampleOnionApp.Application` – Use-case services, DTOs, and abstraction contracts (`ITodoService`, `ITodoRepository`, `TodoItemRequest`).
 - `SampleOnionApp.Infrastructure` – Infrastructure concerns; includes an in-memory repository and registration helpers.
 - `SampleOnionApp.Presentation` – ASP.NET Core minimal API exposing REST endpoints under `/api/todos`.
-- `SampleOnionApp.McpServer` – Console host exposing the same functionality over a simple MCP flavoured JSON-RPC loop.
+- `SampleOnionApp.McpServer` – Console host exposing the same functionality over a simple MCP-flavoured JSON-RPC loop.
 
 The presentation layer depends only on the application layer and infrastructure registrations, while both the web API and the MCP server resolve application services via dependency injection.
 
@@ -25,11 +25,14 @@ dotnet run --project src/SampleOnionApp.Presentation
 
 Once running, exercise the endpoints with any HTTP client:
 
-- `GET /api/todos` – List all items.
+- `GET /api/todos?filter=read` – List all items (optionally filtered by title/description text).
 - `GET /api/todos/{id}` – Retrieve a single item.
 - `POST /api/todos` – Create an item (`{ "title": "Read spec", "description": "Model Context Protocol" }`).
+- `POST /api/todos/bulk` – Create several items in one call (ignores entries with blank titles).
 - `PUT /api/todos/{id}` – Update title/description.
 - `POST /api/todos/{id}/complete` – Mark as complete.
+- `DELETE /api/todos/{id}?confirm=true` – Delete one item (requires an explicit `confirm=true` signal).
+- `DELETE /api/todos?confirm=true` – Delete every item and returns the number removed.
 
 ## Running the MCP server
 
@@ -42,22 +45,26 @@ The server listens for newline-delimited JSON-RPC 2.0 requests on STDIN and emit
 ```bash
 printf '%s\n' \
   '{"jsonrpc":"2.0","id":1,"method":"initialize"}' \
-  '{"jsonrpc":"2.0","id":2,"method":"create_todo","params":{"title":"Draft docs","description":"Outline MCP support"}}' \
-  '{"jsonrpc":"2.0","id":3,"method":"list_todos"}' \
+  '{"jsonrpc":"2.0","id":2,"method":"call_tool","params":{"name":"todos_create","arguments":{"title":"Draft docs","description":"Outline MCP support"}}}' \
+  '{"jsonrpc":"2.0","id":3,"method":"call_tool","params":{"name":"todos_list"}}' \
   | dotnet run --project src/SampleOnionApp.McpServer
 ```
 
 Supported methods:
 
 - `initialize`
-- `list_todos`
-- `get_todo` (`{ "id": "<guid>" }`)
-- `create_todo`
-- `update_todo`
-- `complete_todo`
+- `call_tool` with the following tool names:
+  - `todos_list`
+  - `todos_get`
+  - `todos_create`
+  - `todos_create_range`
+  - `todos_update`
+  - `todos_complete`
+  - `todos_delete`
+  - `todos_delete_all`
 
 > **Note**  
-> The implementation keeps the transport intentionally simple for learnability: it accepts newline-separated JSON rather than the full MCP framing headers. Adapt the loop in `SampleOnionApp.McpServer/Server/McpServerLoop.cs` if you need byte-accurate compliance.
+> The implementation keeps the transport intentionally simple for learnability: it accepts newline-separated JSON rather than the full MCP framing headers. Adapt the setup in `src/SampleOnionApp.McpServer/Program.cs` if you need byte-accurate compliance.
 
 ### Registering the MCP server with Codex CLI
 
