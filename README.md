@@ -1,14 +1,14 @@
 # SampleOnionApp
 
-Sample solution demonstrating an ASP.NET Core API built with an onion architecture, accompanied by a lightweight Model Context Protocol (MCP) compatible JSON-RPC server that shares the same application core.
+Sample solution that highlights a lightweight Model Context Protocol (MCP) server built on top of an onion-architecture todo domain. A companion ASP.NET Core minimal API ships alongside it as a convenient way to explore the same application services over HTTP.
 
 ## Solution layout
 
 - `SampleOnionApp.Domain` – Aggregate roots and domain logic (`TodoItem` entity).
 - `SampleOnionApp.Application` – Use-case services, DTOs, and abstraction contracts (`ITodoService`, `ITodoRepository`, `TodoItemRequest`).
 - `SampleOnionApp.Infrastructure` – Infrastructure concerns; includes an in-memory repository and registration helpers.
-- `SampleOnionApp.Presentation` – ASP.NET Core minimal API exposing REST endpoints under `/api/todos`.
-- `SampleOnionApp.McpServer` – Console host exposing the same functionality over a simple MCP-flavoured JSON-RPC loop.
+- `SampleOnionApp.Presentation` – ASP.NET Core minimal API exposing REST endpoints under `/api/todos` (optional companion host).
+- `SampleOnionApp.McpServer` – Console host exposing the same functionality over a simple MCP-flavoured JSON-RPC loop (project focus).
 
 The presentation layer depends only on the application layer and infrastructure registrations, while both the web API and the MCP server resolve application services via dependency injection.
 
@@ -16,23 +16,6 @@ The presentation layer depends only on the application layer and infrastructure 
 
 - .NET SDK 8.0+
 - Network access is only required if you intend to add external NuGet packages. The current codebase builds without third-party package restores.
-
-## Running the web API
-
-```bash
-dotnet run --project src/SampleOnionApp.Presentation
-```
-
-Once running, exercise the endpoints with any HTTP client:
-
-- `GET /api/todos?filter=read` – List all items (optionally filtered by title/description text).
-- `GET /api/todos/{id}` – Retrieve a single item.
-- `POST /api/todos` – Create an item (`{ "title": "Read spec", "description": "Model Context Protocol" }`).
-- `POST /api/todos/bulk` – Create several items in one call (ignores entries with blank titles).
-- `PUT /api/todos/{id}` – Update title/description.
-- `POST /api/todos/{id}/complete` – Mark as complete.
-- `DELETE /api/todos/{id}?confirm=true` – Delete one item (requires an explicit `confirm=true` signal).
-- `DELETE /api/todos?confirm=true` – Delete every item and returns the number removed.
 
 ## Running the MCP server
 
@@ -75,6 +58,23 @@ codex mcp add sample-onion-todos /home/home/Desktop/codex-test/scripts/run-mcp-s
 ```
 
 After that, `codex mcp list` will show the entry. You can start a Codex session with MCP access by launching Codex and selecting the `sample-onion-todos` server when prompted (or by using the relevant CLI flags once generally available).
+
+## Running the web API (optional companion host)
+
+```bash
+dotnet run --project src/SampleOnionApp.Presentation
+```
+
+Once running, exercise the endpoints with any HTTP client:
+
+- `GET /api/todos?filter=read` – List all items (optionally filtered by title/description text).
+- `GET /api/todos/{id}` – Retrieve a single item.
+- `POST /api/todos` – Create an item (`{ "title": "Read spec", "description": "Model Context Protocol" }`).
+- `POST /api/todos/bulk` – Create several items in one call (ignores entries with blank titles).
+- `PUT /api/todos/{id}` – Update title/description.
+- `POST /api/todos/{id}/complete` – Mark as complete.
+- `DELETE /api/todos/{id}?confirm=true` – Delete one item (requires an explicit `confirm=true` signal).
+- `DELETE /api/todos?confirm=true` – Delete every item and returns the number removed.
 
 ## Onion architecture notes
 
